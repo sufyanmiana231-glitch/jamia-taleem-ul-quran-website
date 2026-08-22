@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# جامعہ تعلیم القرآن — نظم و انصرام سسٹم
 
-## Getting Started
+Management system for Jamia Taleem-ul-Quran: students, teachers, classes,
+attendance, and a full financial ledger (income, expenses, budgets,
+salaries, loans). Urdu-first, RTL, built on Next.js + Firebase.
 
-First, run the development server:
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # fill in Firebase config — see docs/SETUP.md
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app runs and renders even before `.env.local` is filled in — every
+page shows a "Firebase not connected" state instead of crashing. See
+[docs/SETUP.md](docs/SETUP.md) for the full setup, including deploying
+`firestore.rules` and the first-admin bootstrap flow.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start the dev server (Turbopack) |
+| `npm run build` | Production build (also runs typecheck) |
+| `npm run lint` | ESLint |
+| `npm run test` | Run the Vitest suite once |
+| `npm run test:watch` | Vitest in watch mode |
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — module layout, the
+  Firebase abstraction seam, RBAC, i18n
+- [docs/DATABASE.md](docs/DATABASE.md) — Firestore collections, the
+  ledger model, why each entity is shaped the way it is
+- [docs/BUSINESS_RULES.md](docs/BUSINESS_RULES.md) — the financial
+  formulas and invariants the app is built to guarantee
+- [docs/SETUP.md](docs/SETUP.md) — Firebase project setup, environment
+  variables, security rules deployment, first-admin bootstrap
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Tech stack
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 16 (App Router, TypeScript), Tailwind CSS v4, Firebase
+(Auth + Firestore), Zod, React Hook Form, Recharts, Vitest.
