@@ -102,7 +102,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!auth) return;
         await firebaseSignOut(auth);
       },
-      can: (permission: Permission) => can(appUser?.role ?? null, permission),
+      // While Firebase is unconfigured there is no role to check against — and no
+      // backend to enforce anything either — so every permission defaults open,
+      // matching RequireAuth's "let the shell through" behavior in that state.
+      can: (permission: Permission) => !isFirebaseConfigured || can(appUser?.role ?? null, permission),
     }),
     [loading, firebaseUser, appUser],
   );
