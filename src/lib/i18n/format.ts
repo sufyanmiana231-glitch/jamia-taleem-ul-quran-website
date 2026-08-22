@@ -33,3 +33,12 @@ export function todayISO(): string {
 export function currentPeriod(): string {
   return new Date().toISOString().slice(0, 7);
 }
+
+/** Oldest-to-newest list of the last `count` periods (including the current one), e.g. ["2026-03", ..., "2026-08"]. */
+export function recentMonths(count: number): string[] {
+  const now = new Date();
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (count - 1 - i), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+}

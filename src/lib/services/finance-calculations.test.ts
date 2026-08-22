@@ -6,6 +6,7 @@ import {
   computeBudgetUsage,
   computeExpensesByCategory,
   computeLoanOutstanding,
+  computeMonthlySeries,
   computeOutstandingLoansTotal,
   computeSalaryRemaining,
   computeSalaryStatus,
@@ -117,6 +118,22 @@ describe("sumEntriesInRange", () => {
     ];
     const result = sumEntriesInRange(entries, "2026-01-01", "2026-01-31");
     expect(result).toHaveLength(2);
+  });
+});
+
+describe("computeMonthlySeries", () => {
+  it("buckets income/expense/salary per requested period and zero-fills months with no activity", () => {
+    const entries: LedgerEntry[] = [
+      entry({ type: "income", direction: "credit", amount: 10000, date: "2026-01-10" }),
+      entry({ type: "expense", direction: "debit", amount: 3000, date: "2026-01-15" }),
+      entry({ type: "salary_payment", direction: "debit", amount: 5000, date: "2026-02-01" }),
+    ];
+    const result = computeMonthlySeries(entries, ["2025-12", "2026-01", "2026-02"]);
+    expect(result).toEqual([
+      { period: "2025-12", income: 0, expense: 0, salary: 0 },
+      { period: "2026-01", income: 10000, expense: 3000, salary: 0 },
+      { period: "2026-02", income: 0, expense: 0, salary: 5000 },
+    ]);
   });
 });
 

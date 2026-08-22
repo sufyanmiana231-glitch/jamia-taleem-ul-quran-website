@@ -25,6 +25,25 @@
   --gold-soft: #f7efdc;
 
   --radius: 0.65rem;
+
+  /* Chart tokens — validated categorical palette, see dataviz skill references/palette.md */
+  --chart-surface: #fcfcfb;
+  --chart-ink-primary: #0b0b0b;
+  --chart-ink-secondary: #52514e;
+  --chart-ink-muted: #898781;
+  --chart-grid: #e1e0d9;
+  --chart-axis: #c3c2b7;
+  --chart-series-1: #2a78d6; /* blue */
+  --chart-series-2: #008300; /* green */
+  --chart-series-3: #e87ba4; /* magenta */
+  --chart-series-4: #eda100; /* yellow */
+  --chart-series-5: #1baf7a; /* aqua */
+  --chart-series-6: #eb6834; /* orange */
+  --chart-series-7: #4a3aa7; /* violet */
+  --chart-series-8: #e34948; /* red */
+  --chart-income: var(--chart-series-2);
+  --chart-expense: var(--chart-series-8);
+  --chart-other: #a3a299;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,6 +70,24 @@
 
     --gold: #d3ad5f;
     --gold-soft: #362b12;
+
+    --chart-surface: #1a1a19;
+    --chart-ink-primary: #ffffff;
+    --chart-ink-secondary: #c3c2b7;
+    --chart-ink-muted: #898781;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #383835;
+    --chart-series-1: #3987e5;
+    --chart-series-2: #008300;
+    --chart-series-3: #d55181;
+    --chart-series-4: #c98500;
+    --chart-series-5: #199e70;
+    --chart-series-6: #d95926;
+    --chart-series-7: #9085e9;
+    --chart-series-8: #e66767;
+    --chart-income: var(--chart-series-2);
+    --chart-expense: var(--chart-series-8);
+    --chart-other: #6b6a63;
   }
 }
 

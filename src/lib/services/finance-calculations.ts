@@ -53,6 +53,27 @@ export function computeExpensesByCategory(entries: LedgerEntry[]): Record<string
   return result;
 }
 
+export interface MonthlyTotals {
+  period: string; // YYYY-MM
+  income: number;
+  expense: number;
+  salary: number;
+}
+
+/** One row per requested period — the dashboard/report charts drive off this, never off a hand-rolled aggregate. */
+export function computeMonthlySeries(entries: LedgerEntry[], periods: string[]): MonthlyTotals[] {
+  const active = activeEntries(entries);
+  return periods.map((period) => {
+    const inMonth = active.filter((e) => e.date.startsWith(period));
+    return {
+      period,
+      income: inMonth.filter((e) => e.type === "income").reduce((s, e) => s + e.amount, 0),
+      expense: inMonth.filter((e) => e.type === "expense").reduce((s, e) => s + e.amount, 0),
+      salary: inMonth.filter((e) => e.type === "salary_payment").reduce((s, e) => s + e.amount, 0),
+    };
+  });
+}
+
 /** Remaining Budget = Allocated Budget − Actual Expenses (spec §12). */
 export function computeBudgetUsage(allocatedAmount: number, spentAmount: number) {
   const remaining = allocatedAmount - spentAmount;
