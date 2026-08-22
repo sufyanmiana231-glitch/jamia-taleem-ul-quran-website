@@ -1,0 +1,126 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────
+// Firestore security rules — Jamia Taleem-ul-Quran Management System
+//
+// Client-side role checks in the UI are for UX only (hide a button a user
+// can't use). These rules are the actual authorization boundary — the app
+// must never rely on the client to enforce who can write what. Roles are
+// looked up from `users/{uid}.role`, written only by admins (see the
+// `users` rule below) and once via the one-time bootstrap admin flow
+// documented in docs/SETUP.md.
+// ─────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function role() {
+      return isSignedIn() && userDoc().data.isActive == true ? userDoc().data.role : null;
+    }
+
+    function isAdmin() { return role() == 'admin'; }
+    function isAccountant() { return role() in ['admin', 'accountant']; }
+    function isAttendanceWriter() { return role() in ['admin', 'attendance_manager']; }
+    function canReadOperational() { return role() in ['admin', 'accountant', 'teacher', 'attendance_manager', 'viewer']; }
+
+    // Users & roles — only admins manage other users; a user may read their own doc.
+    match /users/{uid} {
+      allow read: if isAdmin() || request.auth.uid == uid;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if canReadOperational();
+      allow write: if isAdmin();
+    }
+
+    // Academic records
+    match /students/{id} {
+      allow read: if canReadOperational();
+      allow write: if isAdmin() || role() == 'teacher';
+    }
+    match /studentAcademicHistory/{id} {
+      allow read: if canReadOperational();
+      allow create: if isAdmin() || role() == 'teacher';
+      allow update, delete: if false; // append-only
+    }
+    match /teachers/{id} {
+      allow read: if canReadOperational();
+      allow write: if isAdmin();
+    }
+    match /schoolClasses/{id} {
+      allow read: if canReadOperational();
+      allow write: if isAdmin();
+    }
+
+    // Attendance
+    match /studentAttendanceDays/{id} {
+      allow read: if canReadOperational();
+      allow write: if isAttendanceWriter() || role() == 'teacher';
+    }
+    match /teacherAttendanceDays/{id} {
+      allow read: if canReadOperational();
+      allow write: if isAttendanceWriter();
+    }
+
+    // Finance — the ledger is append-only from the client; voiding/reversal
+    // is a new offsetting entry, never an edit, so no update rule exists.
+    match /ledgerEntries/{id} {
+      allow read: if isAccountant();
+      allow create: if isAccountant();
+      allow update, delete: if false;
+    }
+    match /incomes/{id} {
+      allow read: if isAccountant();
+      allow write: if isAccountant();
+    }
+    match /expenseCategories/{id} {
+      allow read: if canReadOperational();
+      allow write: if isAccountant();
+    }
+    match /expenses/{id} {
+      allow read: if isAccountant();
+      allow write: if isAccountant();
+    }
+    match /budgets/{id} {
+      allow read: if isAccountant();
+      allow write: if isAccountant();
+    }
+    match /salaryPayments/{id} {
+      allow read: if isAccountant();
+      allow write: if isAccountant();
+    }
+    match /teacherSalaryHistory/{id} {
+      allow read: if isAccountant();
+      allow create: if isAccountant();
+      allow update, delete: if false; // append-only
+    }
+    match /teacherLoans/{id} {
+      allow read: if isAccountant();
+      allow write: if isAccountant();
+    }
+    match /loanRepayments/{id} {
+      allow read: if isAccountant();
+      allow create: if isAccountant();
+      allow update, delete: if false; // append-only
+    }
+    match /welfareSupport/{id} {
+      allow read: if isAccountant();
+      allow write: if isAccountant();
+    }
+
+    match /auditLogs/{id} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if false;
+    }
+  }
+}
