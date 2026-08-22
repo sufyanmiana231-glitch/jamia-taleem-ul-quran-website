@@ -59,18 +59,15 @@ async function bootstrapOrLoadAppUser(firebaseUser: FirebaseUser): Promise<AppUs
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [appUser, setAppUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Nothing to load when Firebase isn't configured — start "not loading" instead of
+  // flipping it off inside the effect, which is unreachable anyway (see below).
+  const [loading, setLoading] = useState(isFirebaseConfigured);
 
   useEffect(() => {
-    if (!isFirebaseConfigured) {
-      setLoading(false);
-      return;
-    }
-    const auth = getFirebaseAuth();
-    if (!auth) {
-      setLoading(false);
-      return;
-    }
+    if (!isFirebaseConfigured) return;
+    // getFirebaseAuth() is guaranteed non-null here: isFirebaseConfigured true means
+    // ensureInitialized() in client.ts already created the app and getAuth() cannot fail.
+    const auth = getFirebaseAuth()!;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user) {

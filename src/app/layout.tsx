@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
 import { LocaleProvider } from "@/lib/i18n";
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   description: "Jamia Taleem-ul-Quran Management System",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ur" dir="rtl" className={`${notoNastaliq.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-background text-foreground">

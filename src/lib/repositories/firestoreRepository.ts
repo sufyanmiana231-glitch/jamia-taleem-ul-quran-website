@@ -12,8 +12,18 @@ import {
   updateDoc,
   type Unsubscribe,
 } from "firebase/firestore";
-import type { ZodType } from "zod";
+import type { ZodType, ZodTypeDef } from "zod";
 import { getFirestoreDb, isFirebaseConfigured } from "@/lib/firebase/client";
+
+/**
+ * Schemas built with `.optional().default(...)` have a wider *input* type
+ * (field can be omitted) than *output* type (field is always present after
+ * parsing). `ZodType<T>` fixes Input = Output = T, which every such schema
+ * fails to satisfy — so repositories only ever care about the parsed
+ * (output) shape, hence the loosened Input parameter here.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyZodType<T> = ZodType<T, ZodTypeDef, any>;
 
 /**
  * Every entity repository is a thin, typed wrapper around these two
@@ -44,7 +54,7 @@ export interface MutableRepository<T extends { id: string }, TCreate> {
  */
 export function createRepository<T extends { id: string }, TCreate extends Record<string, unknown>>(
   collectionName: string,
-  schema: ZodType<T>,
+  schema: AnyZodType<T>,
   orderByField = "createdAt",
 ): MutableRepository<T, TCreate> {
   const parseDoc = (id: string, data: unknown): T | null => {
@@ -128,7 +138,7 @@ export interface LogRepository<T extends { id: string }, TCreate extends Record<
 /** For append-only logs (salary history, loan repayments, academic history) — no update method exists on purpose. */
 export function createLogRepository<T extends { id: string }, TCreate extends Record<string, unknown>>(
   collectionName: string,
-  schema: ZodType<T>,
+  schema: AnyZodType<T>,
   orderByField = "createdAt",
 ): LogRepository<T, TCreate> {
   const parseDoc = (id: string, data: unknown): T | null => {
@@ -171,7 +181,7 @@ export function createLogRepository<T extends { id: string }, TCreate extends Re
 }
 
 /** For singleton "one doc" collections keyed by a fixed id, e.g. settings/organization. */
-export function createSingletonRepository<T>(collectionName: string, docId: string, schema: ZodType<T>) {
+export function createSingletonRepository<T>(collectionName: string, docId: string, schema: AnyZodType<T>) {
   return {
     async get(): Promise<T | null> {
       const db = getFirestoreDb();
@@ -194,7 +204,7 @@ export function createSingletonRepository<T>(collectionName: string, docId: stri
 }
 
 /** Escape hatch for entity-specific queries (e.g. "expenses in this category/period"). */
-export async function getAllRaw<T extends { id: string }>(collectionName: string, schema: ZodType<T>): Promise<T[]> {
+export async function getAllRaw<T extends { id: string }>(collectionName: string, schema: AnyZodType<T>): Promise<T[]> {
   const db = getFirestoreDb();
   if (!isFirebaseConfigured || !db) return [];
   const snap = await getDocs(collection(db, collectionName));

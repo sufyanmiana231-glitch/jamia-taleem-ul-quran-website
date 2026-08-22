@@ -24,6 +24,7 @@ function entry(overrides: Partial<LedgerEntry>): LedgerEntry {
     description: "test",
     sourceCollection: "incomes",
     sourceDocId: "x",
+    reference: "",
     isVoid: false,
     createdAt: "2026-01-01T00:00:00.000Z",
     createdBy: "tester",

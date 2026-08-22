@@ -23,8 +23,14 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
 
   useEffect(() => {
+    // Deliberately not read in a lazy useState initializer: localStorage is
+    // unavailable during SSR, so the server always renders DEFAULT_LOCALE.
+    // Reading it here (once, post-hydration) keeps the first client render
+    // identical to the server's and avoids a hydration mismatch — the one
+    // extra render this causes is an accepted, standard trade-off for that.
     const stored = window.localStorage.getItem(STORAGE_KEY) as Locale | null;
     if (stored && dictionaries[stored]) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- see comment above
       setLocaleState(stored);
     }
   }, []);

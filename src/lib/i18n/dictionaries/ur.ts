@@ -379,7 +379,7 @@ const ur = {
     firebaseNotConnected: "فائربیس ابھی مربوط نہیں",
     language: "زبان",
   },
-} as const;
+};
 
 export default ur;
 export type Dictionary = typeof ur;
