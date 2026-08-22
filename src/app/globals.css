@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f7f5;
+  --surface: #ffffff;
+  --surface-muted: #f1f2ee;
+  --foreground: #1c1f1e;
+  --muted-foreground: #62685f;
+  --border: #e1e3dc;
+
+  --brand: #0f6e5c;
+  --brand-foreground: #ffffff;
+  --brand-soft: #e4f3ee;
+
+  --success: #1a7f4e;
+  --success-soft: #e5f5ec;
+  --warning: #b5750a;
+  --warning-soft: #fbf0dd;
+  --danger: #c0362c;
+  --danger-soft: #fbe9e7;
+  --info: #2563a8;
+  --info-soft: #e6f0fa;
+
+  --gold: #a8791f;
+  --gold-soft: #f7efdc;
+
+  --radius: 0.65rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #12140f;
+    --surface: #1a1d17;
+    --surface-muted: #21241d;
+    --foreground: #eef0e9;
+    --muted-foreground: #a1a89a;
+    --border: #2c3026;
+
+    --brand: #35a084;
+    --brand-foreground: #062019;
+    --brand-soft: #14352c;
+
+    --success: #3fb87a;
+    --success-soft: #133426;
+    --warning: #dba13c;
+    --warning-soft: #3a2c11;
+    --danger: #e2685d;
+    --danger-soft: #3a1c18;
+    --info: #5b9bd8;
+    --info-soft: #142c40;
+
+    --gold: #d3ad5f;
+    --gold-soft: #362b12;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+
+  --font-urdu: var(--font-noto-nastaliq), "Noto Nastaliq Urdu", serif;
+  --font-ui: var(--font-noto-nastaliq), "Noto Nastaliq Urdu", ui-sans-serif, system-ui;
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 0.15rem);
+  --radius-sm: calc(var(--radius) - 0.3rem);
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-ui);
+}
+
+[dir="rtl"] body {
+  font-family: var(--font-urdu);
+  line-height: 2.1;
+  letter-spacing: 0;
+}
+
+[dir="rtl"] .tabular {
+  font-family: ui-sans-serif, system-ui;
+  line-height: 1.5;
+}
+
+::selection {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
