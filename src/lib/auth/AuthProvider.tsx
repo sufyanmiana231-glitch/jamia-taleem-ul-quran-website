@@ -7,7 +7,7 @@ import {
   signOut as firebaseSignOut,
   type User as FirebaseUser,
 } from "firebase/auth";
-import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, runTransaction } from "firebase/firestore";
 import { getFirebaseAuth, getFirestoreDb, isFirebaseConfigured } from "@/lib/firebase/client";
 import type { AppUser, Role } from "@/domain/schema/user";
 import { can, type Permission } from "./roles";
@@ -27,9 +27,16 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
  * The very first person to sign in on a fresh Firebase project becomes
- * admin automatically (checked by counting the `users` collection). Every
- * subsequent signup needs an admin to create their `users/{uid}` doc with
- * an explicit role — there is no self-service admin escalation after that.
+ * admin automatically. Every subsequent signup gets "viewer" and needs an
+ * existing admin to change their role from Settings — there is no
+ * self-service admin escalation after the bootstrap doc is claimed.
+ *
+ * "First person" is decided by a `system/adminBootstrap` sentinel document,
+ * claimed exactly once inside a transaction (see firestore.rules for the
+ * matching write rule) — not by counting the `users` collection, which a
+ * plain client-side check couldn't do safely under concurrent sign-ins,
+ * and which firestore.rules can't express directly (no "collection size"
+ * predicate in the rules language).
  */
 async function bootstrapOrLoadAppUser(firebaseUser: FirebaseUser): Promise<AppUser> {
   const db = getFirestoreDb();
@@ -41,18 +48,28 @@ async function bootstrapOrLoadAppUser(firebaseUser: FirebaseUser): Promise<AppUs
     return { id: existing.id, ...(existing.data() as Omit<AppUser, "id">) };
   }
 
-  const usersSnapshot = await getDocs(query(collection(db, "users"), limit(1)));
-  const isFirstUser = usersSnapshot.empty;
+  const bootstrapRef = doc(db, "system", "adminBootstrap");
+  const createdAt = new Date().toISOString();
 
-  const newUser: Omit<AppUser, "id"> = {
-    name: firebaseUser.displayName || firebaseUser.email || "صارف",
-    email: firebaseUser.email || "",
-    role: isFirstUser ? "admin" : "viewer",
-    isActive: true,
-    linkedTeacherId: null,
-    createdAt: new Date().toISOString(),
-  };
-  await setDoc(userRef, { ...newUser, createdAt: serverTimestamp() });
+  const newUser = await runTransaction(db, async (tx) => {
+    const bootstrapSnap = await tx.get(bootstrapRef);
+    const alreadyClaimed = bootstrapSnap.exists() && bootstrapSnap.data().claimed === true;
+
+    const user: Omit<AppUser, "id"> = {
+      name: firebaseUser.displayName || firebaseUser.email || "صارف",
+      email: firebaseUser.email || "",
+      role: alreadyClaimed ? "viewer" : "admin",
+      isActive: true,
+      linkedTeacherId: null,
+      createdAt,
+    };
+    tx.set(userRef, user);
+    if (!alreadyClaimed) {
+      tx.set(bootstrapRef, { claimed: true, claimedBy: firebaseUser.uid, claimedAt: createdAt });
+    }
+    return user;
+  });
+
   return { id: firebaseUser.uid, ...newUser };
 }
 
@@ -74,7 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           const profile = await bootstrapOrLoadAppUser(user);
           setAppUser(profile);
-        } catch {
+        } catch (err) {
+          // Swallowing this silently is exactly what made the last bug (rules
+          // blocking the first-admin bootstrap) invisible until "the sidebar is
+          // gone" — surface it so a permissions/rules problem is diagnosable
+          // from the browser console instead of a guessing game.
+          console.error("Failed to load or bootstrap the app user profile:", err);
           setAppUser(null);
         }
       } else {

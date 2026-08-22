@@ -45,6 +45,13 @@ code change.
 
 ## 4. Deploy Firestore security rules
 
+The fastest path, no CLI install needed:
+
+**Firebase Console → Firestore Database → Rules tab → paste the contents
+of `firestore.rules` → Publish.**
+
+Or via the CLI:
+
 ```bash
 npm install -g firebase-tools   # if not already installed
 firebase login
@@ -56,10 +63,12 @@ firebase deploy --only firestore:rules
 `firebase init firestore` once, pointing it at the existing
 `firestore.rules` file, will generate one.)
 
-**Do not skip this step.** Without deployed rules, Firestore's default
-"locked mode" denies all reads/writes, or — if the project was created
-in "test mode" — allows anyone to read/write everything. Either way,
-the app's role checks in the UI are not a substitute for these rules.
+**Do not skip this step, and re-publish whenever `firestore.rules`
+changes in the repo** — editing the file locally has no effect until
+it's published. Without deployed rules, Firestore's default "locked
+mode" denies all reads/writes, or — if the project was created in "test
+mode" — allows anyone to read/write everything. Either way, the app's
+role checks in the UI are not a substitute for these rules.
 
 ## 5. First run and admin bootstrap
 
@@ -72,11 +81,20 @@ public "create account" page by design; create the first user directly
 in Firebase Console → Authentication → Users → Add user, or temporarily
 enable a signup form).
 
-**The first person to sign in becomes admin automatically** — checked by
-the `users` collection being empty (see `AuthProvider.bootstrapOrLoadAppUser`
-in `src/lib/auth/AuthProvider.tsx`). Every subsequent signup gets `role:
-viewer` and needs an existing admin to change their role from
-**Settings → Users**.
+**The first person to sign in becomes admin automatically** — a
+`system/adminBootstrap` sentinel document is claimed exactly once inside
+a Firestore transaction (see `AuthProvider.bootstrapOrLoadAppUser` in
+`src/lib/auth/AuthProvider.tsx`, and the matching write rule in
+`firestore.rules`). Every subsequent signup gets `role: viewer` and
+needs an existing admin to change their role from **Settings → Users**.
+
+If sign-in succeeds but the sidebar/nav is empty afterward, that's this
+bootstrap write being rejected — almost always because `firestore.rules`
+wasn't published yet (step 4), or was published *before* a rules change
+in the repo. Check the browser console: `AuthProvider` logs the
+underlying Firestore error there instead of failing silently. Fix is to
+(re-)publish `firestore.rules`, then reload the page — the bootstrap
+runs again automatically on the next sign-in.
 
 ## 6. Seed default expense categories
 

@@ -22,8 +22,15 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    function userExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // Guarded by userExists() first: accessing .data on a get() for a document
+    // that doesn't exist yet (a brand-new sign-in, pre-bootstrap) would otherwise
+    // throw during rule evaluation instead of cleanly denying.
     function role() {
-      return isSignedIn() && userDoc().data.isActive == true ? userDoc().data.role : null;
+      return isSignedIn() && userExists() && userDoc().data.isActive == true ? userDoc().data.role : null;
     }
 
     function isAdmin() { return role() == 'admin'; }
@@ -31,10 +38,31 @@ service cloud.firestore {
     function isAttendanceWriter() { return role() in ['admin', 'attendance_manager']; }
     function canReadOperational() { return role() in ['admin', 'accountant', 'teacher', 'attendance_manager', 'viewer']; }
 
-    // Users & roles — only admins manage other users; a user may read their own doc.
+    // First-admin bootstrap: `system/adminBootstrap` is claimed exactly once, by
+    // whoever gets there first (Firestore serializes concurrent transactions that
+    // touch the same document, so two simultaneous first sign-ins can't both win).
+    // See AuthProvider.bootstrapOrLoadAppUser — this is the rules half of that flow.
+    function bootstrapClaimed() {
+      return exists(/databases/$(database)/documents/system/adminBootstrap) &&
+        get(/databases/$(database)/documents/system/adminBootstrap).data.claimed == true;
+    }
+
+    match /system/adminBootstrap {
+      allow get: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.claimed == true && request.resource.data.claimedBy == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.claimed == false && request.resource.data.claimed == true && request.resource.data.claimedBy == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // Users & roles — a signed-in user may create *their own* doc once, as admin
+    // only if no admin has claimed the bootstrap yet, otherwise as viewer. Only an
+    // existing admin can promote/demote anyone (including themselves) after that.
     match /users/{uid} {
       allow read: if isAdmin() || request.auth.uid == uid;
-      allow write: if isAdmin();
+      allow create: if request.auth.uid == uid
+        && request.resource.data.isActive == true
+        && request.resource.data.role == (bootstrapClaimed() ? 'viewer' : 'admin');
+      allow update, delete: if isAdmin();
     }
 
     match /settings/{docId} {
