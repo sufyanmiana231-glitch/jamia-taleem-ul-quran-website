@@ -47,7 +47,7 @@ export default function LoginPage() {
           <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-brand-foreground">
             <BookOpenText className="h-6 w-6" />
           </div>
-          <CardTitle>{t.auth.loginTitle}</CardTitle>
+          <CardTitle className="font-heading text-xl">{t.auth.loginTitle}</CardTitle>
           <CardDescription>{t.auth.loginSubtitle}</CardDescription>
         </CardHeader>
         <CardContent>

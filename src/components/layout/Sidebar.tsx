@@ -24,8 +24,10 @@ function GroupLink({ group, pathname }: { group: NavGroup; pathname: string }) {
       <Link
         href={group.href!}
         className={cn(
-          "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-          active ? "bg-brand-soft text-brand" : "text-foreground hover:bg-surface-muted",
+          "flex items-center gap-2.5 rounded-md border-s-2 px-2.5 py-2 text-sm font-medium transition-colors duration-150",
+          active
+            ? "border-brand bg-brand-soft text-brand"
+            : "border-transparent text-foreground hover:bg-surface-muted",
         )}
       >
         <Icon className="h-5 w-5 shrink-0" />
@@ -40,8 +42,8 @@ function GroupLink({ group, pathname }: { group: NavGroup; pathname: string }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-          active ? "text-brand" : "text-foreground hover:bg-surface-muted",
+          "flex w-full items-center gap-2.5 rounded-md border-s-2 px-2.5 py-2 text-sm font-medium transition-colors duration-150",
+          active ? "border-brand text-brand" : "border-transparent text-foreground hover:bg-surface-muted",
         )}
       >
         <Icon className="h-5 w-5 shrink-0" />
@@ -84,7 +86,7 @@ export function Sidebar({ className }: { className?: string }) {
           <BookOpenText className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-bold">{t.app.name}</p>
+          <p className="font-heading truncate text-base font-bold leading-tight">{t.app.name}</p>
           <p className="truncate text-xs text-muted-foreground">{t.app.systemName}</p>
         </div>
       </div>

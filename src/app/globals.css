@@ -24,7 +24,7 @@
   --gold: #a8791f;
   --gold-soft: #f7efdc;
 
-  --radius: 0.65rem;
+  --radius: 0.75rem;
 
   /* Chart tokens — validated categorical palette, see dataviz skill references/palette.md */
   --chart-surface: #fcfcfb;
@@ -114,12 +114,16 @@
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
 
+  /* Nastaliq is reserved for large, prominent text (.font-heading below) — at table/
+     form density its calligraphic slant hurts legibility, so the UI default is sans. */
   --font-urdu: var(--font-noto-nastaliq), "Noto Nastaliq Urdu", serif;
-  --font-ui: var(--font-noto-nastaliq), "Noto Nastaliq Urdu", ui-sans-serif, system-ui;
+  --font-ui: var(--font-noto-sans-arabic), "Noto Sans Arabic", ui-sans-serif, system-ui;
 
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 0.15rem);
-  --radius-sm: calc(var(--radius) - 0.3rem);
+  --radius-md: calc(var(--radius) - 0.2rem);
+  --radius-sm: calc(var(--radius) - 0.35rem);
+
+  --shadow-color: 30 20% 10%;
 }
 
 html {
@@ -133,14 +137,22 @@ body {
 }
 
 [dir="rtl"] body {
-  font-family: var(--font-urdu);
-  line-height: 2.1;
+  font-family: var(--font-ui);
+  line-height: 1.85;
   letter-spacing: 0;
 }
 
 [dir="rtl"] .tabular {
   font-family: ui-sans-serif, system-ui;
   line-height: 1.5;
+}
+
+/* Large, prominent text only: app branding, page titles, dialog titles. Never body copy,
+   table cells, or form fields — that's what made the previous all-Nastaliq UI hard to read. */
+.font-heading {
+  font-family: var(--font-urdu);
+  line-height: 2.15;
+  letter-spacing: 0;
 }
 
 ::selection {
@@ -160,3 +172,40 @@ body {
   background: var(--color-border);
   border-radius: 999px;
 }
+
+/* ── Motion ─────────────────────────────────────────────────────────────
+   Radix mounts these with data-state already set, so a CSS *transition*
+   never has a "before" frame to animate from — only a keyframe @animation
+   (which replays on insertion) works here. Kept local to globals.css
+   instead of pulling in tailwindcss-animate for four rules. */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes dialog-out {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.animate-overlay-in { animation: overlay-in 160ms ease-out; }
+.animate-overlay-out { animation: overlay-out 160ms ease-in; }
+.animate-dialog-in { animation: dialog-in 160ms cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-dialog-out { animation: dialog-out 120ms ease-in; }
+.animate-toast-in { animation: toast-in 200ms cubic-bezier(0.16, 1, 0.3, 1); }
+.animate-toast-out { animation: toast-out 150ms ease-in; }

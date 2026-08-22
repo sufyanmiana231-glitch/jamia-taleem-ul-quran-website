@@ -28,15 +28,15 @@ export function StatCard({
   caption?: string;
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-3 p-4">
+    <Card className="hover:shadow-md">
+      <CardContent className="flex items-start justify-between gap-3 p-4 sm:p-5">
         <div className="min-w-0">
           <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="tabular mt-1.5 truncate text-xl font-bold">{value}</p>
+          <p className="tabular mt-1.5 truncate text-2xl font-bold">{value}</p>
           {caption && <p className="mt-1 truncate text-xs text-muted-foreground">{caption}</p>}
         </div>
         {Icon && (
-          <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-lg", toneClasses[tone])}>
+          <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-black/5", toneClasses[tone])}>
             <Icon className="h-5 w-5" />
           </div>
         )}

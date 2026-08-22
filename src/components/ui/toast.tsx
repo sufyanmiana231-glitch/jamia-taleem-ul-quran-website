@@ -44,7 +44,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <ToastPrimitive.Root
             key={item.id}
             className={cn(
-              "pointer-events-auto flex w-full items-start gap-2 rounded-md border p-4 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out",
+              "pointer-events-auto flex w-full items-start gap-2 rounded-lg border p-4 shadow-lg data-[state=open]:animate-toast-in data-[state=closed]:animate-toast-out",
               variantClass[item.variant],
             )}
             onOpenChange={(open) => !open && remove(item.id)}
