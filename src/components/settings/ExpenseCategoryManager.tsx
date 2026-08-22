@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
-import { Plus, Archive, ArchiveRestore } from "lucide-react";
+import { Plus, Archive, ArchiveRestore, Sparkles } from "lucide-react";
 import { expenseCategoryFormSchema, type ExpenseCategory, type ExpenseGroup } from "@/domain/schema/finance";
 import { expenseCategoriesRepository } from "@/lib/repositories";
+import { seedDefaultExpenseCategories } from "@/lib/services/seed-defaults";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useLocale } from "@/lib/i18n";
 import { useToast } from "@/components/ui/toast";
@@ -25,6 +26,20 @@ export function ExpenseCategoryManager({ categories, canWrite }: { categories: E
   const { firebaseUser } = useAuth();
   const { toast } = useToast();
   const [showArchived, setShowArchived] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedDefaults = async () => {
+    if (!firebaseUser) return;
+    setSeeding(true);
+    try {
+      const added = await seedDefaultExpenseCategories(categories.map((c) => c.name), firebaseUser.uid);
+      toast({ title: added > 0 ? t.common.successSaved : t.common.noData, variant: "success" });
+    } catch {
+      toast({ title: t.common.errorGeneric, variant: "danger" });
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const {
     register,
@@ -56,8 +71,14 @@ export function ExpenseCategoryManager({ categories, canWrite }: { categories: E
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex-row items-center justify-between">
         <CardTitle>{t.settings.expenseCategories}</CardTitle>
+        {canWrite && (
+          <Button size="sm" variant="outline" onClick={handleSeedDefaults} disabled={seeding}>
+            <Sparkles className="h-4 w-4" />
+            پہلے سے طے شدہ زمرہ جات شامل کریں
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {canWrite && (
