@@ -4,6 +4,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { teacherLoanFormSchema, type TeacherLoanFormInput, type LoanType } from "@/domain/schema/teacher";
+import type { Teacher } from "@/domain/schema/teacher";
 import { issueTeacherLoan } from "@/lib/services/finance-service";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useLocale, todayISO } from "@/lib/i18n";
@@ -19,7 +20,17 @@ import { Field } from "@/components/shared/Field";
 type FormValues = z.input<typeof teacherLoanFormSchema>;
 const TYPES: LoanType[] = ["loan", "salary_advance", "emergency"];
 
-export function TeacherLoanDialog({ open, onOpenChange, teacherId }: { open: boolean; onOpenChange: (open: boolean) => void; teacherId: string }) {
+export function TeacherLoanDialog({
+  open,
+  onOpenChange,
+  teacherId,
+  teachers,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  teacherId?: string;
+  teachers?: Teacher[];
+}) {
   const { t } = useLocale();
   const { firebaseUser } = useAuth();
   const { toast } = useToast();
@@ -33,9 +44,10 @@ export function TeacherLoanDialog({ open, onOpenChange, teacherId }: { open: boo
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(teacherLoanFormSchema),
-    defaultValues: { teacherId, amount: 0, issueDate: todayISO(), type: "loan", reason: "", deductFromSalary: false, notes: "" },
+    defaultValues: { teacherId: teacherId ?? "", amount: 0, issueDate: todayISO(), type: "loan", reason: "", deductFromSalary: false, notes: "" },
   });
 
+  const selectedTeacherId = watch("teacherId");
   const type = watch("type");
   const deductFromSalary = watch("deductFromSalary");
 
@@ -59,6 +71,22 @@ export function TeacherLoanDialog({ open, onOpenChange, teacherId }: { open: boo
           <DialogTitle>{t.teachers.loan.addLoan}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          {!teacherId && (
+            <Field label={t.teachers.title} required error={errors.teacherId?.message}>
+              <Select value={selectedTeacherId} onValueChange={(v) => setValue("teacherId", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t.common.selectPlaceholder} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(teachers ?? []).map((tr) => (
+                    <SelectItem key={tr.id} value={tr.id}>
+                      {tr.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
           <Field label={t.teachers.loan.amount} required error={errors.amount?.message}>
             <Input type="number" dir="ltr" min={0} {...register("amount", { valueAsNumber: true })} />
           </Field>
